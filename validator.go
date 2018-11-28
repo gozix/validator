@@ -47,80 +47,78 @@ func (b *Bundle) Name() string {
 
 // Build implements the glue.Bundle interface.
 func (b *Bundle) Build(builder *di.Builder) error {
-	builder.Add(di.Def{
-		Name: BundleName,
-		Build: func(ctn di.Container) (_ interface{}, err error) {
-			var configurators = make([]Configurator, 0, 4)
-			for name, def := range ctn.Definitions() {
-				for _, tag := range def.Tags {
-					if TagConfigurator != tag.Name {
-						continue
-					}
+	return builder.Add(
+		di.Def{
+			Name: BundleName,
+			Build: func(ctn di.Container) (_ interface{}, err error) {
+				var configurators = make([]Configurator, 0, 4)
+				for name, def := range ctn.Definitions() {
+					for _, tag := range def.Tags {
+						if TagConfigurator != tag.Name {
+							continue
+						}
 
-					var configurator Configurator
-					if err = ctn.Fill(name, &configurator); err != nil {
+						var configurator Configurator
+						if err = ctn.Fill(name, &configurator); err != nil {
+							return nil, err
+						}
+
+						configurators = append(configurators, configurator)
+					}
+				}
+
+				var validate = validator.New()
+				for _, configurator := range configurators {
+					if err = configurator(validate); err != nil {
 						return nil, err
 					}
-
-					configurators = append(configurators, configurator)
 				}
-			}
 
-			var validate = validator.New()
-			for _, configurator := range configurators {
-				if err = configurator(validate); err != nil {
+				return validate, nil
+			},
+		},
+		di.Def{
+			Name: DefEnLocaleConfigurator,
+			Tags: []di.Tag{{
+				Name: TagConfigurator,
+			}},
+			Build: func(ctn di.Container) (_ interface{}, err error) {
+				var translator *ut.UniversalTranslator
+				if err = ctn.Fill(ut.BundleName, &translator); err != nil {
 					return nil, err
 				}
-			}
 
-			return validate, nil
-		},
-	})
-
-	builder.Add(di.Def{
-		Name: DefEnLocaleConfigurator,
-		Tags: []di.Tag{{
-			Name: TagConfigurator,
-		}},
-		Build: func(ctn di.Container) (_ interface{}, err error) {
-			var translator *ut.UniversalTranslator
-			if err = ctn.Fill(ut.BundleName, &translator); err != nil {
-				return nil, err
-			}
-
-			return func(v *validator.Validate) error {
-				var t, founded = translator.GetTranslator("en")
-				if !founded {
-					return nil
-				}
-
-				return en.RegisterDefaultTranslations(v, t)
-			}, nil
-		},
-	})
-
-	builder.Add(di.Def{
-		Name: DefJsonTagNameConfigurator,
-		Tags: []di.Tag{{
-			Name: TagConfigurator,
-		}},
-		Build: func(ctn di.Container) (interface{}, error) {
-			return func(v *validator.Validate) error {
-				v.RegisterTagNameFunc(func(field reflect.StructField) string {
-					var name = strings.SplitN(field.Tag.Get("json"), ",", 2)[0]
-					if name == "-" {
-						return ""
+				return func(v *validator.Validate) error {
+					var t, founded = translator.GetTranslator("en")
+					if !founded {
+						return nil
 					}
 
-					return name
-				})
-
-				return nil
-			}, nil
+					return en.RegisterDefaultTranslations(v, t)
+				}, nil
+			},
 		},
-	})
+		di.Def{
+			Name: DefJsonTagNameConfigurator,
+			Tags: []di.Tag{{
+				Name: TagConfigurator,
+			}},
+			Build: func(ctn di.Container) (interface{}, error) {
+				return func(v *validator.Validate) error {
+					v.RegisterTagNameFunc(func(field reflect.StructField) string {
+						var name = strings.SplitN(field.Tag.Get("json"), ",", 2)[0]
+						if name == "-" {
+							return ""
+						}
 
-	return nil
+						return name
+					})
+
+					return nil
+				}, nil
+			},
+		},
+	)
 }
 
 // DependsOn implements the glue.DependsOn interface.

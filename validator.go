@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/gozix/universal-translator"
-	"github.com/sarulabs/di"
+	ut "github.com/gozix/universal-translator/v2"
+	"github.com/sarulabs/di/v2"
 	"gopkg.in/go-playground/validator.v9"
 	"gopkg.in/go-playground/validator.v9/translations/en"
 )

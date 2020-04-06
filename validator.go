@@ -4,10 +4,11 @@ import (
 	"reflect"
 	"strings"
 
-	ut "github.com/gozix/universal-translator/v2"
+	"github.com/go-playground/validator/v10"
+	"github.com/go-playground/validator/v10/translations/en"
 	"github.com/sarulabs/di/v2"
-	"gopkg.in/go-playground/validator.v9"
-	"gopkg.in/go-playground/validator.v9/translations/en"
+
+	gzUT "github.com/gozix/universal-translator/v2"
 )
 
 type (
@@ -83,8 +84,8 @@ func (b *Bundle) Build(builder *di.Builder) error {
 				Name: TagConfigurator,
 			}},
 			Build: func(ctn di.Container) (_ interface{}, err error) {
-				var translator *ut.UniversalTranslator
-				if err = ctn.Fill(ut.BundleName, &translator); err != nil {
+				var translator *gzUT.UniversalTranslator
+				if err = ctn.Fill(gzUT.BundleName, &translator); err != nil {
 					return nil, err
 				}
 
@@ -123,5 +124,5 @@ func (b *Bundle) Build(builder *di.Builder) error {
 
 // DependsOn implements the glue.DependsOn interface.
 func (b *Bundle) DependsOn() []string {
-	return []string{ut.BundleName}
+	return []string{gzUT.BundleName}
 }

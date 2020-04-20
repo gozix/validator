@@ -20,6 +20,12 @@ type (
 
 	// Configurator is register default translations func interface.
 	Configurator = func(*validator.Validate) error
+
+	// ValidationErrors is type alias of validator.ValidationErrors.
+	ValidationErrors = validator.ValidationErrors
+
+	// ValidationErrorsTranslations is type alias of validator.ValidationErrorsTranslations.
+	ValidationErrorsTranslations = validator.ValidationErrorsTranslations
 )
 
 const (
